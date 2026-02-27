@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col">
+        <h2 class="h4 mb-0 fw-bold">{{ 'Edit Account' if edit_mode else 'Manage Accounts' }}</h2>
+        <p class="text-secondary small mb-0">{{ 'Modify your trading account details' if edit_mode else 'Create and
+            switch between separate trading accounts' }}</p>
+    </div>
+    {% if edit_mode %}
+    <div class="col-auto">
+        <a href="{{ url_for('accounts.manage_accounts') }}" class="btn btn-sm btn-outline-light glass-sm">
+            <i class="fas fa-arrow-left me-2"></i>Back to List
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card glass shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">{{ 'Edit Account' if edit_mode else 'Create New Account' }}</h5>
+                <form method="POST"
+                    action="{{ url_for('accounts.edit_account', account_id=edit_account.id) if edit_mode else url_for('accounts.manage_accounts') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Account Name</label>
+                        {{ form.name(class="form-control", placeholder="e.g. Prop Firm Main") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Description</label>
+                        {{ form.description(class="form-control", placeholder="Optional details...") }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Initial Balance</label>
+                        {{ form.balance(class="form-control") }}
+                    </div>
+                    {{ form.submit(class="btn btn-premium-primary w-100", value='Update Account' if edit_mode else
+                    'Create Account') }}
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card glass shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold mb-4">Your Trading Accounts</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="text-secondary small text-uppercase">
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Description</th>
+                                <th>Balance</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for acc in accounts %}
+                            <tr class="{{ 'opacity-50' if edit_mode and acc.id != edit_account.id }}">
+                                <td>
+                                    <div class="fw-bold">{{ acc.name }}</div>
+                                    {% if active_account and acc.id == active_account.id %}
+                                    <span class="badge bg-success glass-sm" style="font-size: 0.6rem;">ACTIVE</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-secondary">{{ acc.description or '-' }}</td>
+                                <td class="fw-bold">${{ "{:,.2f}".format(acc.balance) }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ url_for('accounts.select_account', account_id=acc.id) }}"
+                                            class="btn btn-xs btn-outline-light glass-sm {{ 'disabled' if edit_mode }}">
+                                            Select
+                                        </a>
+                                        <a href="{{ url_for('accounts.edit_account', account_id=acc.id) }}"
+                                            class="btn btn-xs btn-outline-info glass-sm {{ 'active' if edit_mode and acc.id == edit_account.id }}">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="POST"
+                                            action="{{ url_for('accounts.delete_account', account_id=acc.id) }}"
+                                            onsubmit="return confirm('WARNING: Deleting this account will permanently remove all associated trades, journals, and notes. Proceed?');"
+                                            class="d-inline">
+                                            <button type="submit"
+                                                class="btn btn-xs btn-outline-danger glass-sm {{ 'disabled' if edit_mode }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary">
+                                    No accounts found. Create your first account to get started.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-xs {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 0.2rem;
+    }
+</style>
+{% endblock %}

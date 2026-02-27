@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Top Stats Row (Radar + Charts) -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="card-premium glass h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-secondary small fw-bold">Zella Score <i class="fas fa-info-circle ms-1"></i></span>
+            </div>
+            <div style="height: 240px; position: relative;">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <div
+                class="mt-4 pt-3 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-end">
+                <div>
+                    <div class="text-secondary x-small uppercase fw-bold mb-1">ZELLA SCORE</div>
+                    <div class="h2 fw-bold mb-0 text-white">{{ '%.2f'|format(zella_score) }}</div>
+                </div>
+                <div class="text-end">
+                    <div class="text-secondary x-small uppercase fw-bold mb-1">AVG PIPS</div>
+                    <div class="h4 fw-bold mb-0 text-purple">{{ '%.1f'|format(avg_pips) }}</div>
+                </div>
+                <div class="w-25 ms-3">
+                    <div class="progress bg-dark bg-opacity-50" style="height: 6px; border-radius: 10px;">
+                        <div class="progress-bar bg-gradient-zella" style="width: {{ zella_score }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-premium glass h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-secondary small fw-bold">Daily Net Cumulative P&L <i
+                        class="fas fa-info-circle ms-1"></i></span>
+            </div>
+            <div style="height: 280px;">
+                <canvas id="cumulativePnLChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-premium glass h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-secondary small fw-bold">Net Daily P&L <i class="fas fa-info-circle ms-1"></i></span>
+            </div>
+            <div style="height: 280px;">
+                <canvas id="dailyPnLChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Recent Trades + Calendar -->
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card-premium glass h-100 p-0 overflow-hidden">
+            <div class="px-4 pt-4 pb-2">
+                <ul class="nav nav-pills custom-pills mb-3" id="tradeTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active py-1 px-3 small" data-bs-toggle="pill"
+                            data-bs-target="#recent-trades">RECENT TRADES</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link py-1 px-3 small" data-bs-toggle="pill"
+                            data-bs-target="#open-positions">OPEN POSITIONS</button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="recent-trades">
+                    <table class="table table-dark table-hover border-0 mb-0 align-middle">
+                        <thead class="bg-dark bg-opacity-25 x-small text-secondary">
+                            <tr>
+                                <th class="ps-4 py-3 border-0">Close Date</th>
+                                <th class="py-3 border-0">Symbol</th>
+                                <th class="pe-4 text-end py-3 border-0">Net P&L</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small border-0">
+                            {% for trade in recent_trades %}
+                            <tr>
+                                <td class="ps-4 border-secondary border-opacity-10 py-3">{{
+                                    trade.date.strftime('%m/%d/%Y') }}</td>
+                                <td class="fw-bold border-secondary border-opacity-10 py-3">{{ trade.symbol }}</td>
+                                <td
+                                    class="pe-4 text-end fw-bold border-secondary border-opacity-10 py-3 {{ 'text-success' if trade.pnl > 0 else 'text-danger' }}">
+                                    {{ '$%.2f'|format(trade.pnl)|replace('$-', '-$') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="p-3 text-center border-top border-secondary border-opacity-10">
+                        <a href="{{ url_for('trades.trade_list') }}"
+                            class="text-purple x-small fw-bold text-decoration-none">View More</a>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-5 text-center text-secondary" id="open-positions">
+                    <i class="fas fa-layer-group fs-2 mb-3"></i>
+                    <p class="small">No active positions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card-premium glass h-100 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-link link-secondary p-0"><i class="fas fa-chevron-left"></i></button>
+                    <h5 class="fw-bold mb-0">{{ month_name }}</h5>
+                    <button class="btn btn-link link-secondary p-0"><i class="fas fa-chevron-right"></i></button>
+                    <button class="btn btn-glass-sm py-1 px-3 small">This month</button>
+                </div>
+                <div class="d-flex align-items-center gap-4">
+                    <div class="small">
+                        <span class="text-secondary opacity-50">Best Trade:</span>
+                        {% if best_trade %}
+                        <span class="text-success fw-bold">{{ best_trade.symbol }} (${{ '%.2f'|format(best_trade.pnl)
+                            }})</span>
+                        {% else %}
+                        <span class="text-secondary">N/A</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <i class="fas fa-cog text-secondary small opacity-50 cursor-pointer"></i>
+                        <i class="fas fa-info-circle text-secondary small opacity-50 cursor-pointer"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-0 border-top border-secondary border-opacity-25">
+                <div class="col">
+                    <div class="calendar-grid-zella">
+                        <div
+                            class="row row-cols-7 g-0 text-center x-small text-secondary fw-bold border-bottom border-secondary border-opacity-10">
+                            <div class="col py-2">Sun</div>
+                            <div class="col py-2">Mon</div>
+                            <div class="col py-2">Tue</div>
+                            <div class="col py-2">Wed</div>
+                            <div class="col py-2">Thu</div>
+                            <div class="col py-2">Fri</div>
+                            <div class="col py-2">Sat</div>
+                        </div>
+                        {% for week in calendar_data %}
+                        <div class="row row-cols-7 g-0">
+                            {% for day in week %}
+                            <div class="col border-end border-bottom border-secondary border-opacity-10">
+                                <div class="calendar-day-zella p-2 {{ 'has-trades' if day and day.stats.count > 0 }}"
+                                    style="background: {{ 'rgba(16,185,129,0.15)' if day and day.stats.pnl > 0 else 'rgba(239,68,68,0.15)' if day and day.stats.pnl < 0 else 'transparent' }}">
+                                    {% if day %}
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="x-small text-secondary opacity-50">{{ day.day }}</span>
+                                    </div>
+                                    {% if day.stats.count > 0 %}
+                                    <div class="text-center py-2">
+                                        <div
+                                            class="fw-bold small {{ 'text-success' if day.stats.pnl > 0 else 'text-danger' }}">
+                                            ${{ '%.1fk'|format(day.stats.pnl/1000) if day.stats.pnl|abs >= 1000 else
+                                            '%.0f'|format(day.stats.pnl) }}
+                                        </div>
+                                        <div class="x-small text-secondary opacity-50">{{ day.stats.count }} trades
+                                        </div>
+                                        <div class="x-small text-secondary opacity-50">50.0%</div>
+                                    </div>
+                                    {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-auto weekly-summary-column border-start border-secondary border-opacity-25"
+                    style="width: 100px;">
+                    {% for sum in weekly_summaries %}
+                    <div class="week-stat-card p-2 border-bottom border-secondary border-opacity-10 text-center d-flex flex-column justify-content-center"
+                        style="height: 100px;">
+                        <div class="x-small text-secondary mb-1">Week {{ loop.index }}</div>
+                        <div
+                            class="fw-bold small {{ 'text-success' if sum.pnl > 0 else 'text-danger' if sum.pnl < 0 else 'text-secondary' }}">
+                            ${{ '%.1fk'|format(sum.pnl/1000) if sum.pnl|abs >= 1000 else '%.0f'|format(sum.pnl) }}
+                        </div>
+                        <div class="x-small text-secondary opacity-50">{{ sum.days }} days</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-zella {
+        background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #10b981 80%);
+    }
+
+    .x-small {
+        font-size: 0.65rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .nav-pills.custom-pills .nav-link {
+        color: var(--text-secondary);
+        background: transparent;
+        border: 1px solid transparent;
+        font-weight: 700;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+    }
+
+    .nav-pills.custom-pills .nav-link.active {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+    }
+
+    .calendar-day-zella {
+        height: 100px;
+        transition: background 0.2s ease;
+        cursor: pointer;
+    }
+
+    .calendar-day-zella:hover {
+        background: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    .btn-glass-sm {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+        color: var(--text-primary);
+        border-radius: 6px;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .weekly-summary-column .week-stat-card:last-child {
+        border-bottom: none;
+    }
+
+    .object-fit-cover {
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Constants for Charts
+    const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+            x: { grid: { display: false }, border: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+        }
+    };
+
+    // Radar Chart (Zella Score)
+    new Chart(document.getElementById('radarChart'), {
+        type: 'radar',
+        data: {
+            labels: ['Win %', 'Profit factor', 'Avg win/loss', 'Recovery factor', 'Max drawdown', 'Consistency'],
+            datasets: [{
+                data: {{ radar_data | tojson }},
+        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+        borderColor: '#8b5cf6',
+        borderWidth: 2,
+        pointBackgroundColor: '#8b5cf6',
+        pointRadius: 2
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                angleLines: { color: 'rgba(255,255,255,0.05)' },
+                pointLabels: { color: '#94a3b8', font: { size: 9 } },
+                ticks: { display: false, max: 100 }
+            }
+        },
+        plugins: { legend: { display: false } }
+    }
+    });
+
+    // Cumulative P&L Area Chart
+    const cumCtx = document.getElementById('cumulativePnLChart').getContext('2d');
+    const cumGradient = cumCtx.createLinearGradient(0, 0, 0, 250);
+    cumGradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+    cumGradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+    new Chart(cumCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                data: {{ cumulative_pnl | tojson }},
+        borderColor: '#10b981',
+        borderWidth: 2,
+        backgroundColor: cumGradient,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0
+            }]
+        },
+        options: chartDefaults
+    });
+
+    // Daily P&L Bar Chart
+    new Chart(document.getElementById('dailyPnLChart'), {
+        type: 'bar',
+        data: {
+            datasets: [{
+                data: {{ daily_pnl | tojson }},
+        backgroundColor: (context) => {
+            const value = context.raw?.y;
+            return value >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)';
+        },
+        borderRadius: 2
+            }]
+        },
+        options: chartDefaults
+    });
+</script>
+{% endblock %}

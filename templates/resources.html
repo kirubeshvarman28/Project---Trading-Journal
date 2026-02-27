@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold mb-1">Academy & Tools</h2>
+        <p class="text-secondary small">Personalized resource library for strategy mastery</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card-premium glass">
+            <h5 class="fw-bold mb-4">Add New Resource</h5>
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    <label class="form-label text-secondary small uppercase">Resource Title</label>
+                    {{ form.title(class="form-control input-premium") }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small uppercase">Link/URL</label>
+                    {{ form.link(class="form-control input-premium") }}
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-secondary small uppercase">Category</label>
+                    {{ form.category(class="form-select input-premium") }}
+                </div>
+                {{ form.submit(class="btn btn-premium-primary w-100") }}
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="row g-4">
+            {% for resource in resources %}
+            <div class="col-md-6">
+                <div class="card-premium glass h-100 d-flex flex-column animate-fade"
+                    style="animation-delay: {{ loop.index0 * 0.1 }}s">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge glass-sm text-purple px-3 py-2 uppercase x-small">{{ resource.category
+                            }}</span>
+                        <i class="fas fa-external-link-alt text-secondary"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">{{ resource.title }}</h5>
+                    <a href="{{ resource.link }}" target="_blank"
+                        class="mt-auto btn btn-premium glass text-white w-100 border-0 x-small fw-bold">Explore
+                        Content</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<style>
+    .uppercase {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+</style>
+{% endblock %}

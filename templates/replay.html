@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold mb-1">Trade Replay</h2>
+        <p class="text-secondary small">Deconstruct your executions frame by frame</p>
+    </div>
+</div>
+
+<div class="card-premium glass p-5 text-center">
+    <div class="opacity-50 py-5">
+        <i class="fas fa-play-circle fs-1 mb-4 text-purple"></i>
+        <h4 class="fw-bold mb-2">Visual Replay Engine</h4>
+        <p class="text-secondary small mx-auto" style="max-width: 400px;">Select a trade from your history to start the
+            replay mode. This feature allows you to review screenshots and market context for every logged execution.
+        </p>
+        <a href="{{ url_for('trades.trade_list') }}" class="btn btn-premium glass text-white mt-4 px-4 border-0">Go to
+            Trade List</a>
+    </div>
+</div>
+{% endblock %}

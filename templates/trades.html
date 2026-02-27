@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold mb-1">Execution Log</h2>
+        <p class="text-secondary small">Comprehensive audit of your performance</p>
+    </div>
+    <a href="{{ url_for('trades.new_trade') }}" class="btn btn-premium-primary px-4">
+        <i class="fas fa-plus-circle me-2"></i> Log New Trade
+    </a>
+</div>
+
+<div class="card-premium glass overflow-hidden p-0">
+    <table class="premium-table mb-0">
+        <thead>
+            <tr>
+                <th>Execution Date</th>
+                <th>Asset</th>
+                <th>Action</th>
+                <th>Lots</th>
+                <th>Entry</th>
+                <th>Exit</th>
+                <th>Pips</th>
+                <th>PnL ($)</th>
+                <th>Result</th>
+                <th>Proof</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trade in trades %}
+            <tr class="animate-fade" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+                <td class="small text-secondary">{{ trade.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><span class="badge glass-sm text-purple text-uppercase px-3 py-2 fw-bold">{{ trade.symbol }}</span>
+                </td>
+                <td><span class="fw-bold {{ 'text-success' if trade.type == 'Buy' else 'text-danger' }}">{{
+                        trade.type|upper }}</span></td>
+                <td class="small fw-bold">{{ trade.lot_size }}</td>
+                <td class="small">{{ '%.2f'|format(trade.entry_price) }}</td>
+                <td class="small">{{ '%.2f'|format(trade.exit_price) }}</td>
+                <td class="small fw-bold {{ 'text-success' if trade.pips > 0 else 'text-danger' }}">{{
+                    trade.pips|default(0) }}</td>
+                <td class="fw-bold {{ 'text-success' if trade.pnl > 0 else 'text-danger' }}">
+                    {{ '$+%.2f'|format(trade.pnl) if trade.pnl > 0 else '$%.2f'|format(trade.pnl) }}
+                </td>
+                <td>
+                    <span
+                        class="badge {{ 'bg-success' if trade.pnl > 0 else 'bg-danger' }} rounded-pill px-3 py-1 x-small fw-bold">
+                        {{ 'WIN' if trade.pnl > 0 else 'LOSS' }}
+                    </span>
+                </td>
+                <td>
+                    {% if trade.screenshot %}
+                    <a href="{{ url_for('static', filename='uploads/' + trade.screenshot) }}" target="_blank"
+                        class="btn btn-xs btn-outline-info glass-sm">
+                        <i class="fas fa-image me-1"></i>View
+                    </a>
+                    {% else %}
+                    <span class="text-secondary small opacity-50">None</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <form action="{{ url_for('trades.delete_trade', trade_id=trade.id) }}" method="POST">
+                        <button type="submit" class="btn btn-link text-danger p-0"
+                            onclick="return confirm('Archive this trade?')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    .btn-xs {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 0.2rem;
+    }
+</style>
+{% endblock %}

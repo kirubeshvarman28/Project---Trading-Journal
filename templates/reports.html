@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+        <h2 class="fw-bold mb-1">Performance Analytics</h2>
+        <p class="text-secondary small">Deep dive into your trading statistics</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card-premium stat-card glass">
+            <div class="label uppercase">Total Volume</div>
+            <div class="value">{{ total_trades }} <small class="fs-6 text-secondary">TRADES</small></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-premium stat-card glass">
+            <div class="label uppercase">Win/Loss Ratio</div>
+            <div class="value text-purple">{{ '%.1f'|format(win_rate) }}% / {{ '%.1f'|format(100 - win_rate) }}%</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-premium stat-card glass">
+            <div class="label uppercase">Accumulated P&L</div>
+            <div class="value {{ 'text-success' if total_pnl >= 0 else 'text-danger' }}">
+                ${{ '%.2f'|format(total_pnl) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-premium stat-card glass">
+            <div class="label uppercase">Avg Pips / Trade</div>
+            <div class="value text-info">{{ '%.1f'|format(avg_pips) }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card-premium glass p-4 h-100">
+            <h5 class="fw-bold mb-4">Cumulative Equity Curve</h5>
+            <div style="height: 350px;">
+                <canvas id="equityCurve"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-premium glass p-4 mb-4">
+            <h5 class="fw-bold mb-4">Volume Distribution</h5>
+            <div style="height: 200px;">
+                <canvas id="volumeChart"></canvas>
+            </div>
+        </div>
+        <div class="card-premium glass p-4">
+            <h5 class="fw-bold mb-2">Strategy Efficiency</h5>
+            <p class="text-secondary x-small mb-4">Performance by Strategy Tag</p>
+            <div class="text-center py-4 opacity-50">
+                <i class="fas fa-chart-pie fs-1 mb-2"></i>
+                <p class="small">Tag your trades to see strategy analytics</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Equity Curve
+    const ctx = document.getElementById('equityCurve').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 5', 'Day 10', 'Day 15', 'Day 20'],
+            datasets: [{
+                label: 'Equity',
+                data: [0, 420, 310, 890, 1200],
+                borderColor: '#8b5cf6',
+                background: gradient,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // Volume Chart
+    new Chart(document.getElementById('volumeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Wins', 'Losses'],
+            datasets: [{
+                data: [{{ win_rate }}, {{ 100 - win_rate }}],
+        backgroundColor: ['#10b981', '#ef4444'],
+        borderWidth: 0
+    }]
+        },
+        options: {
+        cutout: '75%',
+        plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } }
+    }
+    });
+</script>
+{% endblock %}

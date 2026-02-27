@@ -1,0 +1,136 @@
+<!-- Lot Size Calculator Modal -->
+<div class="modal fade" id="lotCalcModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass border-secondary shadow-lg">
+            <div class="modal-header border-bottom border-secondary pb-3">
+                <h5 class="modal-title fw-bold"><i class="fas fa-calculator me-2 text-purple"></i>Lot Size Calculator
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small text-secondary">Trading Instrument</label>
+                        <select id="calcPath" class="form-select input-premium">
+                            <option value="forex" selected>Forex (EURUSD, GBPUSD...)</option>
+                            <option value="jpy">JPY Pairs (USDJPY, EURJPY...)</option>
+                            <option value="gold">Gold (XAUUSD)</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-secondary">Account Balance ($)</label>
+                        <input type="number" id="calcBalance" class="form-control input-premium"
+                            value="{{ active_account.balance if active_account else 0 }}" step="0.01">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small text-secondary">Risk (%)</label>
+                        <input type="number" id="calcRiskPct" class="form-control input-premium" value="1" step="0.1">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small text-secondary">Stop Loss (Pips)</label>
+                        <input type="number" id="calcSL" class="form-control input-premium" placeholder="e.g. 20"
+                            step="1">
+                    </div>
+                    <div class="col-12 mt-4">
+                        <div class="card bg-purple-dark glass p-3 border-0">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="x-small text-secondary text-uppercase mb-1">Recommended</div>
+                                    <div id="resLots" class="h4 mb-0 fw-bold text-white">0.00</div>
+                                    <div class="x-small text-secondary">Lots</div>
+                                </div>
+                                <div class="col-4 border-start border-secondary py-1">
+                                    <div class="x-small text-secondary text-uppercase mb-1">Risk Amount</div>
+                                    <div id="resRiskUSD" class="h5 mb-0 fw-bold text-success">$0.00</div>
+                                </div>
+                                <div class="col-4 border-start border-secondary py-1">
+                                    <div class="x-small text-secondary text-uppercase mb-1">Pip Value</div>
+                                    <div id="resPipVal" class="h5 mb-0 fw-bold text-info">$0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="calcWarning" class="col-12 mt-2 text-warning small text-center d-none">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Warning: Lot size exceeds safe margin!
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-secondary pt-3">
+                <button type="button" class="btn btn-outline-light btn-sm glass-sm px-4"
+                    data-bs-dismiss="modal">Close</button>
+                <button type="button" id="btnApplyLots" class="btn btn-premium-primary btn-sm px-4">Apply to
+                    Trade</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const calcPath = document.getElementById('calcPath');
+        const calcBalance = document.getElementById('calcBalance');
+        const calcRiskPct = document.getElementById('calcRiskPct');
+        const calcSL = document.getElementById('calcSL');
+        const resLots = document.getElementById('resLots');
+        const resRiskUSD = document.getElementById('resRiskUSD');
+        const resPipVal = document.getElementById('resPipVal');
+        const btnApplyLots = document.getElementById('btnApplyLots');
+        const calcWarning = document.getElementById('calcWarning');
+
+        function calculate() {
+            const balance = parseFloat(calcBalance.value) || 0;
+            const riskPct = parseFloat(calcRiskPct.value) || 0;
+            const slPips = parseFloat(calcSL.value) || 0;
+            const instrument = calcPath.value;
+
+            if (balance <= 0 || riskPct <= 0 || slPips <= 0) return;
+
+            // Step 1: Calculate Risk Amount
+            const riskUSD = balance * (riskPct / 100);
+            resRiskUSD.innerText = '$' + riskUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Step 2: Determine Pip Value per Standard Lot
+            let pipValuePerLot = 10; // Default for Forex
+            if (instrument === 'jpy') {
+                pipValuePerLot = 9.1; // Placeholder for JPY, can be dynamic
+            } else if (instrument === 'gold') {
+                pipValuePerLot = 1; // 1 pip (0.01) = $1 for 1 lot
+            }
+            resPipVal.innerText = '$' + pipValuePerLot.toFixed(2);
+
+            // Step 3: Lot Size Formula
+            // Lot Size = Risk Amount / (Stop Loss Pips * Pip Value)
+            let lotSize = riskUSD / (slPips * pipValuePerLot);
+
+            // Formatting
+            resLots.innerText = lotSize.toFixed(2);
+
+            // Margin Warning (Simple check: if lot size > balance / 1000, e.g. 100:1 leverage check simplified)
+            if (lotSize > (balance * 0.1)) { // Example heuristic
+                calcWarning.classList.remove('d-none');
+            } else {
+                calcWarning.classList.add('d-none');
+            }
+        }
+
+        [calcPath, calcBalance, calcRiskPct, calcSL].forEach(el => {
+            el.addEventListener('input', calculate);
+        });
+
+        btnApplyLots.addEventListener('click', function () {
+            const lotInput = document.querySelector('input[name="lot_size"]');
+            if (lotInput) {
+                lotInput.value = resLots.innerText;
+                const modal = bootstrap.Modal.getInstance(document.getElementById('lotCalcModal'));
+                modal.hide();
+            }
+        });
+    });
+</script>
+
+<style>
+    .bg-purple-dark {
+        background: rgba(111, 66, 193, 0.15) !important;
+    }
+</style>

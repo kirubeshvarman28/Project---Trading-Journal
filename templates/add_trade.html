@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="glass p-5 animate-fade" style="width: 500px;">
+        <h3 class="fw-bold text-center mb-4">Log Execution</h3>
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-secondary small text-uppercase">Asset Symbol</label>
+                    {{ form.symbol(class="form-control input-premium", placeholder="XAUUSD") }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-secondary small text-uppercase">Execution Type</label>
+                    {{ form.type(class="form-select input-premium") }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-secondary small text-uppercase">Entry Price</label>
+                    {{ form.entry_price(class="form-control input-premium", step="any") }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-secondary small text-uppercase">Exit Price</label>
+                    {{ form.exit_price(class="form-control input-premium", step="any") }}
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between">
+                        <label class="form-label text-secondary small text-uppercase">Lot Size</label>
+                        <a href="#" class="text-purple small fw-bold text-decoration-none" data-bs-toggle="modal"
+                            data-bs-target="#lotCalcModal">
+                            <i class="fas fa-calculator me-1"></i>Calculator
+                        </a>
+                    </div>
+                    {{ form.lot_size(class="form-control input-premium", step="any") }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-secondary small text-uppercase">Execution Date</label>
+                    {{ form.date(class="form-control input-premium", type="date") }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-secondary small text-uppercase">Strategic Notes</label>
+                    {{ form.notes(class="form-control input-premium", rows="3") }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-secondary small text-uppercase">Chart Screenshot</label>
+                    {{ form.screenshot(class="form-control input-premium") }}
+                </div>
+                <div class="col-12 mt-4">
+                    {{ form.submit(class="btn btn-premium-primary w-100 py-3") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% include "lot_calculator_modal.html" %}
+
+{% endblock %}

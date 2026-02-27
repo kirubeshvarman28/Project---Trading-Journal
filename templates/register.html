@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block auth_content %}
+<div class="d-flex vh-100 align-items-center justify-content-center"
+    style="background: radial-gradient(circle at top right, #1e293b, #0f172a);">
+    <div class="glass p-5 animate-fade" style="width: 440px;">
+        <div class="text-center mb-5">
+            <div class="brand-logo mx-auto mb-3" style="width: 48px; height: 48px;"><i
+                    class="fas fa-bolt text-white fs-4"></i></div>
+            <h2 class="fw-bold brand-name text-uppercase">TradeJournal</h2>
+            <p class="text-secondary small">Master your edge through discipline</p>
+        </div>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                <label class="form-label text-secondary small text-uppercase fw-bold">Username</label>
+                {{ form.username(class="form-control input-premium", placeholder="market_wizard") }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary small text-uppercase fw-bold">Email Address</label>
+                {{ form.email(class="form-control input-premium", placeholder="trader@market.com") }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-secondary small text-uppercase fw-bold">Password</label>
+                {{ form.password(class="form-control input-premium", placeholder="••••••••") }}
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-secondary small text-uppercase fw-bold">Confirm Password</label>
+                {{ form.confirm_password(class="form-control input-premium", placeholder="••••••••") }}
+            </div>
+            {{ form.submit(class="btn btn-premium-primary w-100 py-3") }}
+        </form>
+
+        <p class="text-center mt-4 mb-0 text-secondary small">
+            Already registered? <a href="{{ url_for('auth.login') }}" class="text-purple text-decoration-none fw-bold"
+                style="color: var(--accent-purple);">Login</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
